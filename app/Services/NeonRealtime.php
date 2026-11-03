@@ -25,12 +25,23 @@ class NeonRealtime
             ])
             ->input(json_encode(['sql' => $sql, 'params' => $params]))
             ->timeout(15)
-            ->run(['node', 'scripts/realtime-seal.mjs']);
+            ->run(['node', $this->script()]);
 
         if ($result->failed()) {
             throw new RuntimeException('Sealing the live query failed: '.trim($result->errorOutput()));
         }
 
         return json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * The self-contained bundle (npm run build:seal) needs no node_modules, which
+     * deployed functions such as Vercel's don't ship; locally the source works too.
+     */
+    private function script(): string
+    {
+        return file_exists(base_path('scripts/dist/realtime-seal.mjs'))
+            ? 'scripts/dist/realtime-seal.mjs'
+            : 'scripts/realtime-seal.mjs';
     }
 }
