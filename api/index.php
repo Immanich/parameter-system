@@ -22,4 +22,9 @@ foreach ($defaults as $key => $value) {
     }
 }
 
+// Run as if public/index.php was hit directly; otherwise Laravel takes /api (this file's
+// folder) as the app's base path and /api/trips would route as /trips.
+$_SERVER['SCRIPT_FILENAME'] = realpath(__DIR__.'/../public/index.php');
+$_SERVER['SCRIPT_NAME'] = $_SERVER['PHP_SELF'] = '/index.php';
+
 require __DIR__.'/../public/index.php';

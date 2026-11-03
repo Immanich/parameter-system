@@ -2,12 +2,17 @@
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "framework": null,
     "installCommand": "npm ci",
-    "buildCommand": "npm run build",
-    "outputDirectory": "public",
+    "buildCommand": "npm run build && rm -rf .vercel-static && cp -R public .vercel-static && rm -f .vercel-static/index.php .vercel-static/.htaccess .vercel-static/hot",
+    "outputDirectory": ".vercel-static",
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.8.0"
         }
     },
-    "rewrites": [{ "source": "/(.*)", "destination": "/api/index.php" }]
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/api/index.php"
+        }
+    ]
 }
