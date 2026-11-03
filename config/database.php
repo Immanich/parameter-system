@@ -84,7 +84,8 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
+            // Neon: DATABASE_URL is the pooled (-pooler) connection string for app traffic.
+            'url' => env('DB_URL', env('DATABASE_URL')),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -95,6 +96,18 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
+        ],
+
+        // Neon direct (unpooled) connection for migrations, dumps and session state:
+        // php artisan migrate --database=pgsql_direct
+        'pgsql_direct' => [
+            'driver' => 'pgsql',
+            'url' => env('DATABASE_URL_UNPOOLED'),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'require',
         ],
 
         'sqlsrv' => [

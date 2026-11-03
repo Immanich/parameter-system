@@ -2,9 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { fetchSealedQuery, realtime } from '@/lib/neon';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { RealtimeProvider, useLiveQuery } from '@neon/realtime-react';
+import { type SealedLiveQuery } from '@neon/realtime/client';
+import { FormEventHandler, useEffect, useRef, useState } from 'react';
 
 interface LedgerTrip {
     id: number;
@@ -81,6 +84,14 @@ export default function Ledger({ trips, filters, totals }: LedgerProps) {
                     <Button type="button" variant="outline" onClick={reset}>
                         Reset
                     </Button>
+                    <Button asChild variant="outline">
+                        <a href={route('ledger.export', filters)}>Export CSV</a>
+                    </Button>
+                    <div className="ml-auto self-center">
+                        <RealtimeProvider client={realtime}>
+                            <LiveUpdates />
+                        </RealtimeProvider>
+                    </div>
                 </form>
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -177,6 +188,53 @@ export default function Ledger({ trips, filters, totals }: LedgerProps) {
                 )}
             </div>
         </AppLayout>
+    );
+}
+
+interface LatestTrip {
+    id: number;
+    updated_at: string;
+}
+
+const sealLatestTrip = () => fetchSealedQuery<LatestTrip>(route('ledger.live'));
+
+/** Reloads the ledger whenever Neon Realtime reports a trip was added or changed (e.g. a driver synced). */
+function LiveUpdates() {
+    const [sealed, setSealed] = useState<SealedLiveQuery<LatestTrip>>();
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        sealLatestTrip().then(setSealed, () => setFailed(true));
+    }, []);
+
+    if (failed) return <LiveBadge live={false} label="Live updates off" />;
+    if (!sealed) return <LiveBadge live={false} label="Connecting…" />;
+    return <LiveSubscription sealed={sealed} />;
+}
+
+function LiveSubscription({ sealed }: { sealed: SealedLiveQuery<LatestTrip> }) {
+    const { data, status } = useLiveQuery(sealed, { refreshQuery: sealLatestTrip });
+    const latest = data === undefined ? undefined : data[0] ? `${data[0].id}@${String(data[0].updated_at)}` : 'none';
+    const seen = useRef<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (latest === undefined) return;
+        if (seen.current !== undefined && seen.current !== latest) {
+            router.reload({ only: ['trips', 'totals'] });
+        }
+        seen.current = latest;
+    }, [latest]);
+
+    if (status === 'error') return <LiveBadge live={false} label="Live updates stopped" />;
+    return <LiveBadge live={status === 'live'} label={status === 'live' ? 'Live' : 'Connecting…'} />;
+}
+
+function LiveBadge({ live, label }: { live: boolean; label: string }) {
+    return (
+        <span className="text-muted-foreground inline-flex items-center gap-2 text-xs" data-live={live}>
+            <span className={`h-2 w-2 rounded-full ${live ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+            {label}
+        </span>
     );
 }
 

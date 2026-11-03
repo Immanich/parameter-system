@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'neon' => [
+        'auth_url' => env('NEON_AUTH_BASE_URL'),
+        'auth_jwks_url' => env('NEON_AUTH_JWKS_URL'),
+        'realtime_url' => env('NEON_REALTIME_URL'),
+        'realtime_secret' => env('NEON_REALTIME_SECRET'),
+    ],
+
 ];
