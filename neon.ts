@@ -3,8 +3,8 @@ import { defineConfig } from "@neon/config/v1";
 export default defineConfig({
   // Declare your Neon services here
   preview: {
-    // Origins the admin ledger is served from (php artisan serve / composer dev).
-    realtime: { allowedOrigins: ["http://localhost:8000", "http://127.0.0.1:8000"] },
+    // Origins the admin ledger is served from (php artisan serve / composer dev, and Vercel).
+    realtime: { allowedOrigins: ["http://localhost:8000", "http://127.0.0.1:8000", "https://parameter.vercel.app"] },
   },
   auth: true,
   buckets: {
