@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Local dev talks to a remote Neon database whose first connection after idle
+        // (scale-to-zero wake-up) can take ~25s; don't let `php artisan serve` kill it at 30s.
+        if ($this->app->isLocal() && ! $this->app->runningInConsole()) {
+            set_time_limit(120);
+        }
     }
 }

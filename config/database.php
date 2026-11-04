@@ -96,6 +96,9 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
+            // Local dev only: reuse one connection across `php artisan serve` requests, because
+            // opening a new one to Neon sometimes stalls for 15-30s. Leave off in production.
+            'options' => env('DB_PERSISTENT', false) ? [PDO::ATTR_PERSISTENT => true] : [],
         ],
 
         // Neon direct (unpooled) connection for migrations, dumps and session state:
